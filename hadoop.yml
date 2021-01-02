@@ -1,0 +1,57 @@
+- hosts: all
+  tasks:
+  - name: Download jdk Software
+    copy: 
+     src: "/root/book/jdk-8u171-linux-x64 (1).rpm"
+     dest: "/home/ec2-user"
+    register: x
+  - name: Install Jdk Software
+    command: rpm -i jdk-8u171-linux-x64\ \(1\).rpm 
+    when: x.changed==true
+  - name: Download hadoop Software
+    copy:
+     src: "/root/book/hadoop-1.2.1-1.x86_64 (1).rpm"
+     dest: "/home/ec2-user" 
+    register: y
+  - name: Install Hadoop Software
+    command: rpm -i  hadoop-1.2.1-1.x86_64\ \(1\).rpm --force
+    when:  y.changed==true
+
+
+- hosts: master
+  tasks:
+  - name: creating (/nn) directory
+    file: 
+     path: "/nn"
+     state: directory
+  - name: configure file(hdfs-site.xml) in master
+    template:
+     src: "/root/book/master/hdfs-site.xml"
+     dest: "/etc/hadoop"
+  - name: configure file(core-site.xml) in master
+    template:
+     src: "/root/book/master/core-site.xml"
+     dest: "/etc/hadoop"
+  - name: Formate namenode folder
+    shell: echo Y | hadoop namenode -format 
+  - name: starting hadoop nanenode services
+    shell: hadoop-daemon.sh start namenode
+    ignore_errors: yes
+
+- hosts: slave
+  tasks:
+  - name: creating (/dn) directory
+    file:
+     path: "/dn"
+     state: directory
+  - name: configure file(hdfs-site.xml) in slave
+    template: 
+     src: "/root/book/slave/hdfs-site.xml"
+     dest: "/etc/hadoop"
+  - name: configure file(core-site.xml) in slave
+    template:
+     src: "/root/book/slave/core-site.xml"
+     dest: "/etc/hadoop"
+  - name: starting hadoop datenode services       
+    shell: hadoop-daemon.sh start datanode 
+    ignore_errors: yes 
